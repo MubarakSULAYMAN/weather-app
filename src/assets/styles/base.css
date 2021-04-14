@@ -1,0 +1,48 @@
+:root {
+	--font-xs: 10px;
+	--font-sm: 12px;
+	--font-normal: 16px;
+	--font-md: 20px;
+	--font-lg: 36px;
+	--font-xl: 60px;
+	--blue-crayola: #5a7df9ff;
+	--magnolia: #eef2ffff;
+	--white: #ffffffff;
+	--ghost-white: #f3f5faff;
+	--black: #000000ff;
+	--light-gray: #d3d3d3ff;
+	--sonic-silver: #7c7a7a;
+	--united-nations: #648de5;
+	--celtic-blue: #226ce0;
+}
+
+[data-theme="dark"] {
+	--github-dark: var(--github-light);
+	--github-light: var(--github-dark);
+}
+
+body,
+html {
+	scroll-behavior: smooth;
+	/* font-family: 'Helvetica', sans-serif; */
+	color: var(--black);
+	font-size: var(--font-normal);
+	font-style: normal;
+	font-weight: normal;
+	background-color: var(--white);
+}
+
+* {
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+}
+
+@media screen and (max-width: 768px) {
+	:root {
+		--font-lg: 28px;
+		--font-xl: 54px;
+	}
+}
+
+/* @media screen and (max-width: 428px) {} */
