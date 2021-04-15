@@ -54,6 +54,7 @@ export default {
       c_timestamp: "",
       weather_icon: "",
       c_temperature: 0,
+      temperature: 0,
       c_condition: "",
       c_humidity: 0,
       c_windspeed: 0,
@@ -94,6 +95,9 @@ export default {
         this.c_timestamp = timeF + ", " + dateF;
         this.weather_icon = data.weather[0].icon;
         this.c_temperature = parseInt(data.main.temp.toFixed(1));
+        // console.log(this.c_temperature);
+        this.temperature = data.main.temp;
+        // console.log(this.temperature);
         this.c_condition = data.weather[0].main;
         this.c_humidity = data.main.humidity;
         this.c_windspeed = data.wind.speed;
@@ -122,12 +126,7 @@ export default {
     },
 
     exportData() {
-      this.$emit(
-        "pws_data",
-        this.c_temperature,
-        this.pw_request,
-        this.pw_error
-      );
+      this.$emit("pws_data", this.temperature, this.pw_request, this.pw_error);
     },
   },
 };

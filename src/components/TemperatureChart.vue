@@ -1,12 +1,11 @@
 <script>
-import { Line } from "vue-chartjs";
-// import { Line, mixins } from "vue-chartjs";
-// const { reactiveProp } = mixins;
+// import { Line } from "vue-chartjs";
+import { Line, mixins } from "vue-chartjs";
+const { reactiveProp } = mixins;
 
 export default {
-  // extends: VueChartJs.Line,
   extends: Line,
-  // mixins: [reactiveProp],
+  mixins: [reactiveProp],
 
   props: {
     label: {

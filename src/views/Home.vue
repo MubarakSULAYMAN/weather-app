@@ -1,7 +1,12 @@
 <template>
   <div>
-    <section v-if="isRequesting === false && isError === false">
-      <p>My Weather App</p>
+    <section
+      v-if="
+        r_permission === true || (isRequesting === false && isError === false)
+      "
+    >
+      <p class="app-name">My Weather App</p>
+      <p class="location">Location: {{ city_name }}</p>
       <div class="home">
         <div class="city-area">
           <label for="city">Your city</label>
@@ -32,8 +37,9 @@
       </div>
     </section>
 
-    <div class="overlay" v-if="isRequesting === true || isError === true">
-      <p v-if="r_permission">Requesting Permission...</p>
+    <div class="overlay" v-if="r_permission === true || isRequesting === true">
+      <!-- || isError === true -->
+      <p v-if="r_permission">{{ permission_msg }}</p>
       <p v-if="isRequesting === true">Updating Result...</p>
       <p v-if="isError === true">Request unsuccessful, kindly refresh.</p>
     </div>
@@ -53,8 +59,7 @@ export default {
 
   data() {
     return {
-      // u_request: true,
-      // error: true,
+      permission_msg: "Requesting Permission...",
       r_permission: true,
       wfn_request: null,
       wfn_error: null,
@@ -71,32 +76,72 @@ export default {
   methods: {
     initializeRequest() {
       if (navigator.geolocation) {
-        navigator.permissions.query({ name: "geolocation" }).then((result) => {
-          if (result.state == "granted") {
-            !this.r_permission;
+        navigator.permissions
+          .query({ name: "geolocation" })
+          .then((geo_status) => {
+            console.log("No need to check");
+            if (geo_status.state !== "granted") {
+              console.log("Checking...");
+              let time = 10000;
+              setTimeout(() => {
+                if (geo_status.state === "granted") {
+                  this.r_permission = false;
+                  console.log((this.r_permission = false));
 
-            navigator.geolocation.watchPosition((position) => {
-              this.lat = position.coords.latitude;
-              this.lon = position.coords.longitude;
+                  navigator.geolocation.watchPosition((position) => {
+                    this.lat = position.coords.latitude;
+                    this.lon = position.coords.longitude;
 
-              this.$refs.pws.fetchGeolocationWeather(),
-                this.$refs.wfs.fetchGeolocationForecast();
-            });
-          }
-          // if the permission was denied.
-          this.$refs.pws.fetchCityWeather(), this.$refs.wfs.fetchCityForecast();
-        });
+                    console.log("Request accepted");
+                    this.geolocationRequest();
+                  });
+                }
+                // if the permission was denied.
+                console.log("Request denied");
+                this.r_permission = false;
+                this.defaultRequest();
+              }, time);
+
+              let timeleft = time / 1000;
+              if (timeleft > 0) {
+                let countdownTimer = setInterval(function () {
+                  if (timeleft <= 0) {
+                    clearInterval(countdownTimer);
+                  }
+
+                  this.permission_msg = `Requesting Permission, auto request will be made in ${timeleft} seconds`;
+                }, 1000);
+              }
+            }
+            this.r_permission = false;
+            // this.defaultRequest();
+            this.geolocationRequest();
+          });
+        //           this.r_permission = false;
+        // this.defaultRequest();
       } else {
-        this.$refs.pws.fetchCityWeather(), this.$refs.wfs.fetchCityForecast();
+        this.r_permission = false;
+        this.defaultRequest();
       }
     },
 
-    updateRequest() {
+    defaultRequest() {
       this.$refs.pws.fetchCityWeather(), this.$refs.wfs.fetchCityForecast();
+    },
+
+    geolocationRequest() {
+      this.$refs.pws.fetchGeolocationWeather(),
+        this.$refs.wfs.fetchGeolocationForecast();
+      // this.$refs.pws.fetchCityWeather(), this.$refs.wfs.fetchCityForecast();
+    },
+
+    updateRequest() {
+      this.defaultRequest();
     },
 
     updateData1(...data1) {
       const [x, y, z] = data1;
+
       this.currentTemp = x;
       this.pwn_request = y;
       this.pwn_error = z;
@@ -104,9 +149,13 @@ export default {
     },
 
     updateData2(...data2) {
-      const [a, b] = data2;
-      this.wfn_request = a;
-      this.wfn_error = b;
+      const [a, b, c] = data2;
+
+      if (this.city_name === a) {
+        this.city_name = a;
+      }
+      this.wfn_request = b;
+      this.wfn_error = c;
       // console.log(a, b);
     },
   },
@@ -142,10 +191,18 @@ section {
 
 p {
   position: absolute;
-  top: 10px;
-  left: 10px;
   color: var(--white);
   font-weight: 700;
+}
+
+p.app-name {
+  top: 10px;
+  left: 10px;
+}
+
+p.location {
+  top: 10px;
+  right: 10px;
 }
 
 .home {
@@ -234,9 +291,17 @@ img {
   }
 
   p {
+    font-size: var(--font-sm);
+  }
+
+  p.app-name {
     top: 8px;
     left: 8px;
-    font-size: var(--font-sm);
+  }
+
+  p.location {
+    top: 8px;
+    right: 8px;
   }
 
   .overlay p {
@@ -260,9 +325,17 @@ img {
   }
 
   p {
+    font-size: var(--font-xs);
+  }
+
+  p {
     top: 6px;
     left: 6px;
-    font-size: var(--font-xs);
+  }
+
+  p {
+    top: 6px;
+    right: 6px;
   }
 
   .overlay p {

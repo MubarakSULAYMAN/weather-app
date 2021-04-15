@@ -48,6 +48,7 @@ export default {
     currentTemp: {
       type: Number,
       default: 0,
+      // required: true,
     },
     lat: {
       type: Number,
@@ -116,6 +117,7 @@ export default {
         },
       },
 
+      location: "",
       iconArr: [],
       temperatureArr: [],
       conditionArr: [],
@@ -132,6 +134,9 @@ export default {
       if (data.cod.includes(200)) {
         this.wf_request = false;
         const forecasts = data.list;
+
+        this.location = data.name;
+
         const result = forecasts.map((a) => ({
           fc_weather_icon: a.weather[0].icon,
           fc_temperature: a.main.temp,
@@ -156,6 +161,8 @@ export default {
 
         this.iconArr = iconArr;
         this.temperatureArr = [this.currentTemp, ...temperatureArr];
+        // console.log(temperatureArr);
+        // console.log(this.temperatureArr);
         this.weatherConditionsArr = conditionArr;
         this.humidityArr = humidityArr;
         this.windspeedArr = windspeedArr;
@@ -187,7 +194,7 @@ export default {
     },
 
     exportData() {
-      this.$emit("wfs_data", this.wf_request, this.wf_error);
+      this.$emit("wfs_data", this.location, this.wf_request, this.wf_error);
     },
   },
 };
