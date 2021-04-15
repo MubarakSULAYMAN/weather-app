@@ -57,41 +57,48 @@ export default {
       c_condition: "",
       c_humidity: 0,
       c_windspeed: 0,
+      pw_request: null,
+      pw_error: null,
     };
   },
 
   methods: {
     getResult(data) {
-      const c_date = new Date(data.dt * 1000);
+      this.pw_request = true;
+      // if (data.cod.includes(200)) {
+      if (data.cod === 200) {
+        this.pw_request = false;
+        const c_date = new Date(data.dt * 1000);
 
-      const options1 = {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        // "DD MM YYYY hh:mm:ss": true,
-        // formatMatcher: "basic",
-        // second: "numeric",
-        // timeZoneName: "short",
-      };
+        const options1 = {
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true,
+          // "DD MM YYYY hh:mm:ss": true,
+          // formatMatcher: "basic",
+          // second: "numeric",
+          // timeZoneName: "short",
+        };
 
-      const options2 = {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        weekday: "short",
-      };
+        const options2 = {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          weekday: "short",
+        };
 
-      const timeF = new Intl.DateTimeFormat("en-US", options1).format(c_date);
+        const timeF = new Intl.DateTimeFormat("en-US", options1).format(c_date);
 
-      const dateF = new Intl.DateTimeFormat("en-US", options2).format(c_date);
+        const dateF = new Intl.DateTimeFormat("en-US", options2).format(c_date);
 
-      this.c_timestamp = timeF + ", " + dateF;
-      this.weather_icon = data.weather[0].icon;
-      this.c_temperature = parseInt(data.main.temp.toFixed(1));
-      this.c_condition = data.weather[0].main;
-      this.c_humidity = data.main.humidity;
-      this.c_windspeed = data.wind.speed;
-      this.currentTemp();
+        this.c_timestamp = timeF + ", " + dateF;
+        this.weather_icon = data.weather[0].icon;
+        this.c_temperature = parseInt(data.main.temp.toFixed(1));
+        this.c_condition = data.weather[0].main;
+        this.c_humidity = data.main.humidity;
+        this.c_windspeed = data.wind.speed;
+        this.exportData();
+      } else this.pw_error = true;
     },
 
     async fetchCityWeather() {
@@ -100,6 +107,7 @@ export default {
         this.getResult(data);
       } catch (e) {
         console.log(e);
+        this.pw_error = true;
       }
     },
 
@@ -109,11 +117,17 @@ export default {
         this.getResult(data);
       } catch (e) {
         console.log(e);
+        this.pw_error = true;
       }
     },
 
-    currentTemp() {
-      this.$emit("temp", this.c_temperature);
+    exportData() {
+      this.$emit(
+        "pws_data",
+        this.c_temperature,
+        this.pw_request,
+        this.pw_error
+      );
     },
   },
 };

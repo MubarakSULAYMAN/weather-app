@@ -1,34 +1,43 @@
 <template>
-  <section>
-    <p>My Weather App</p>
-    <div class="home">
-      <div class="city-area">
-        <label for="city">Your city</label>
-        <input
-          type="text"
-          name="city"
-          id="city-name"
-          :placeholder="city_name"
-          v-model="city_name"
-          @keydown.enter="updateRequest()"
-        />
+  <div>
+    <section v-if="isRequesting === false && isError === false">
+      <p>My Weather App</p>
+      <div class="home">
+        <div class="city-area">
+          <label for="city">Your city</label>
+          <input
+            type="text"
+            name="city"
+            id="city-name"
+            :placeholder="city_name"
+            v-model="city_name"
+            @keydown.enter="updateRequest()"
+          />
+        </div>
+        <div class="data-area">
+          <present-weather-summary
+            ref="pws"
+            :city_name="city_name"
+            @pws_data="updateData1"
+          />
+        </div>
+        <div class="chart-area">
+          <weather-forecast-summary
+            ref="wfs"
+            :city_name="city_name"
+            :currentTemp="currentTemp"
+            @wfs_data="updateData2"
+          />
+        </div>
       </div>
-      <div class="data-area">
-        <present-weather-summary
-          ref="pws"
-          :city_name="city_name"
-          @temp="getTemp"
-        />
-      </div>
-      <div class="chart-area">
-        <weather-forecast-summary
-          ref="wfs"
-          :city_name="city_name"
-          :currentTemp="currentTemp"
-        />
-      </div>
+    </section>
+
+    <div class="overlay" v-if="isRequesting === true || isError === true">
+      <p v-if="r_permission">Requesting Permission...</p>
+      <p v-if="isRequesting === true">Updating Result...</p>
+      <p v-if="isError === true">Request unsuccessful, kindly refresh.</p>
     </div>
-  </section>
+  </div>
 </template>
 
 <script>
@@ -44,6 +53,13 @@ export default {
 
   data() {
     return {
+      // u_request: true,
+      // error: true,
+      r_permission: true,
+      wfn_request: null,
+      wfn_error: null,
+      pwn_request: null,
+      pwn_error: null,
       city_name: "Abuja",
       lat: 0,
       lon: 0,
@@ -55,12 +71,20 @@ export default {
   methods: {
     initializeRequest() {
       if (navigator.geolocation) {
-        navigator.geolocation.watchPosition((position) => {
-          this.lat = position.coords.latitude;
-          this.lon = position.coords.longitude;
+        navigator.permissions.query({ name: "geolocation" }).then((result) => {
+          if (result.state == "granted") {
+            !this.r_permission;
 
-          this.$refs.pws.fetchGeolocationWeather(),
-            this.$refs.wfs.fetchGeolocationForecast();
+            navigator.geolocation.watchPosition((position) => {
+              this.lat = position.coords.latitude;
+              this.lon = position.coords.longitude;
+
+              this.$refs.pws.fetchGeolocationWeather(),
+                this.$refs.wfs.fetchGeolocationForecast();
+            });
+          }
+          // if the permission was denied.
+          this.$refs.pws.fetchCityWeather(), this.$refs.wfs.fetchCityForecast();
         });
       } else {
         this.$refs.pws.fetchCityWeather(), this.$refs.wfs.fetchCityForecast();
@@ -71,8 +95,29 @@ export default {
       this.$refs.pws.fetchCityWeather(), this.$refs.wfs.fetchCityForecast();
     },
 
-    getTemp(x) {
+    updateData1(...data1) {
+      const [x, y, z] = data1;
       this.currentTemp = x;
+      this.pwn_request = y;
+      this.pwn_error = z;
+      // console.log(y, z);
+    },
+
+    updateData2(...data2) {
+      const [a, b] = data2;
+      this.wfn_request = a;
+      this.wfn_error = b;
+      // console.log(a, b);
+    },
+  },
+
+  computed: {
+    isRequesting() {
+      return [this.pwn_request, this.wfn_request].includes(true);
+    },
+
+    isError() {
+      return [this.pwn_error, this.wfn_error].includes(true);
     },
   },
 
@@ -153,7 +198,17 @@ input:focus {
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: rgba(238, 242, 255, 0.9);
+  background-color: rgba(238, 242, 255, 0.95);
+}
+
+.overlay p {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: var(--font-xl);
+  color: var(--celtic-blue);
+  text-align: center;
+  transform: translate(-50%, -50%);
 }
 
 .day {
@@ -184,6 +239,10 @@ img {
     font-size: var(--font-sm);
   }
 
+  .overlay p {
+    font-size: var(--font-lg);
+  }
+
   .home {
     grid-template-columns: 1fr;
     padding: 20px;
@@ -204,6 +263,10 @@ img {
     top: 6px;
     left: 6px;
     font-size: var(--font-xs);
+  }
+
+  .overlay p {
+    font-size: var(--font-md);
   }
 
   .home {

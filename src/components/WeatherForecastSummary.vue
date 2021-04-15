@@ -121,39 +121,46 @@ export default {
       conditionArr: [],
       humidityArr: [],
       windspeedArr: [],
+      wf_request: null,
+      wf_error: null,
     };
   },
 
   methods: {
     getResult(data) {
-      const forecasts = data.list;
-      const result = forecasts.map((a) => ({
-        fc_weather_icon: a.weather[0].icon,
-        fc_temperature: a.main.temp,
-        fc_condition: a.weather[0].main,
-        fc_humidity: a.main.humidity,
-        fc_windspeed: a.wind.speed,
-      }));
+      this.wf_request = true;
+      if (data.cod.includes(200)) {
+        this.wf_request = false;
+        const forecasts = data.list;
+        const result = forecasts.map((a) => ({
+          fc_weather_icon: a.weather[0].icon,
+          fc_temperature: a.main.temp,
+          fc_condition: a.weather[0].main,
+          fc_humidity: a.main.humidity,
+          fc_windspeed: a.wind.speed,
+        }));
 
-      let iconArr = [];
-      let temperatureArr = [];
-      let conditionArr = [];
-      let humidityArr = [];
-      let windspeedArr = [];
+        let iconArr = [];
+        let temperatureArr = [];
+        let conditionArr = [];
+        let humidityArr = [];
+        let windspeedArr = [];
 
-      for (let i = 0; i < result.length; i++) {
-        iconArr.push(result[i].fc_weather_icon);
-        temperatureArr.push(result[i].fc_temperature);
-        conditionArr.push(result[i].fc_condition);
-        humidityArr.push(result[i].fc_humidity);
-        windspeedArr.push(result[i].fc_windspeed);
-      }
+        for (let i = 0; i < result.length; i++) {
+          iconArr.push(result[i].fc_weather_icon);
+          temperatureArr.push(result[i].fc_temperature);
+          conditionArr.push(result[i].fc_condition);
+          humidityArr.push(result[i].fc_humidity);
+          windspeedArr.push(result[i].fc_windspeed);
+        }
 
-      this.iconArr = iconArr;
-      this.temperatureArr = [this.currentTemp, ...temperatureArr];
-      this.weatherConditionsArr = conditionArr;
-      this.humidityArr = humidityArr;
-      this.windspeedArr = windspeedArr;
+        this.iconArr = iconArr;
+        this.temperatureArr = [this.currentTemp, ...temperatureArr];
+        this.weatherConditionsArr = conditionArr;
+        this.humidityArr = humidityArr;
+        this.windspeedArr = windspeedArr;
+        this.exportData();
+      } else this.wf_error = true;
     },
 
     async fetchCityForecast() {
@@ -162,6 +169,7 @@ export default {
         this.getResult(data);
       } catch (e) {
         console.log(e);
+        this.wf_error = true;
       }
     },
 
@@ -174,7 +182,12 @@ export default {
         this.getResult(data);
       } catch (e) {
         console.log(e);
+        this.wf_error = true;
       }
+    },
+
+    exportData() {
+      this.$emit("wfs_data", this.wf_request, this.wf_error);
     },
   },
 };
